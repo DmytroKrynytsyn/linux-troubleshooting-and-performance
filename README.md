@@ -35,8 +35,8 @@ Where the kernel exposes the same data through a file, it's called out as a **`/
 | [Disk & storage](disk.md) | `iostat`, `df`/`du`, inode exhaustion, deleted-but-open files, growing a volume, EBS burst balance, NVMe naming | I/O is slow, a volume is full, or `await` is spiking |
 | [Network](network.md) | `ss`, `ip`, `tcpdump`, security groups vs. NACLs, ENA allowance counters, conntrack, ephemeral ports, MTU, DNS limits | Connections are timing out, dropping, or "it's not the network" needs proof |
 | [Advanced diagnostics](performance.md) | `strace`, `ltrace`, `perf`, eBPF (`bcc`/`bpftrace`), fd and process limits, packet capture workflow | The above guides told you *what* is slow — this tells you *why*, at the syscall/kernel level |
-| [Distro matrix](distro-matrix.md) | Package names, service managers, network config layers, firewall front-ends, bootloader tooling, side by side | You know the tool, you just need the right name on *this* box |
-| [Interview drills](interview-drills.md) | 30 scenario questions with model answers, structured the way you'd actually talk through them | You're preparing for a systems engineering interview |
+| [Distro matrix](distro.md) | Package names, service managers, network config layers, firewall front-ends, bootloader tooling, side by side | You know the tool, you just need the right name on *this* box |
+| [Interview drills](interview.md) | 30 scenario questions with model answers, structured the way you'd actually talk through them | You're preparing for a systems engineering interview |
 
 ## The 30-second version
 
