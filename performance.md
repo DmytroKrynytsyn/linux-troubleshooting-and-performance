@@ -2,6 +2,15 @@
 
 The other guides in this repo answer "*what* is slow" — CPU, memory, disk, or network. This one answers "*why*," at the syscall or kernel level, once you've narrowed the problem to a specific process. These are the tools for the moment `top` and `iostat` have told you *which* process to look at, but not *what it's actually doing*.
 
+## 1-Minute Summary
+
+- Confirm there's an actual queue first (`vmstat`/`mpstat`) — don't profile a process that isn't contended.
+- `strace -c -p PID` before a raw trace — the syscall summary alone usually tells you the shape of the problem (I/O-bound, lock contention, or failing config lookups).
+- `/proc/PID/stack` and `/proc/PID/wchan` cost nothing to read and work even on a wedged process that `strace -p` might hang trying to attach to.
+- `perf stat -p PID`'s IPC number separates "genuinely CPU-bound, needs algorithmic work" from "stalling on cache misses/branch mispredictions" — two problems that look identical in `top`.
+- Prefer eBPF (`bcc-tools`) over `strace`/`ltrace` for anything continuous or production-facing — `ptrace`-based tracing can slow a process 2–10x.
+- **In containers:** `strace` often needs the `SYS_PTRACE` capability added explicitly (ECS/EKS tasks don't have it by default) or it just hangs/fails.
+
 ## Methodology
 
 1. **Locate the queue first.** `vmstat`/`mpstat` tell you *if* there's a backlog before you spend time explaining *why* — no point profiling a process that isn't actually contended.

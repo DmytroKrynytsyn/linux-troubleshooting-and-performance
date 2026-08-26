@@ -2,6 +2,14 @@
 
 An EC2 instance that's slow to boot, fails its status checks, or comes up without networking is one of the more stressful incidents to debug — you often can't SSH in yet, so your first evidence is the console output. This guide covers diagnosing it once you *can* get in (or via `EC2 Serial Console` if you can't), plus the AWS-specific causes that don't show up on a laptop.
 
+## 1-Minute Summary
+
+- `systemd-analyze critical-chain`, not `blame` — `blame` lists slow units, `critical-chain` shows what was actually *waited on*. Trust the latter.
+- `journalctl -xb` for this boot; `journalctl -b -1 -p err` for the *previous* boot if the instance crashed/rebooted unexpectedly.
+- EC2 status checks pass but SSH times out → almost always guest-side networking (NIC renamed, firewall), not the hypervisor. Check `ip -br a` and `dmesg | grep -i eth` first.
+- Can't get in over SSH yet? Use the **EC2 Serial Console** — it shows kernel boot output before networking is even up.
+- `cloud-init` runs after systemd's core targets and fails silently to a normal boot check — verify it separately with `cloud-init status --long` and `/var/log/cloud-init-output.log`.
+
 ## Methodology
 
 1. **Did it boot at all, and how long did it take?** `systemd-analyze` gives you the headline number.

@@ -2,6 +2,15 @@
 
 Memory problems on Linux have a uniquely misleading first symptom: `free -h` almost always shows "low free memory," even on a perfectly healthy box, because the kernel aggressively uses spare RAM for page cache. The actual skill here is telling *reclaimable* cache from *real* pressure, and finding which process actually owns the memory before you reach for `kill`.
 
+## 1-Minute Summary
+
+- `free -h` always looks alarming — read **`available`**, not `free`. `cache` is reclaimable disk pages, not a leak.
+- `vmstat`'s `si`/`so` non-zero means the kernel is *actively* swapping right now — the clearest real signal of memory pressure, expensive because every page is a disk round-trip.
+- `cat /proc/pressure/memory` — `full avg10` rising means *every* runnable process is stalled, a much stronger "act now" signal than any `free -h` number.
+- RSS overcounts shared memory across processes — use `/proc/PID/smaps_rollup` (`Pss`) for the honest per-process number.
+- Process vanished? Check `dmesg -T | grep -iE 'oom|killed'` *first* — if the OOM killer already fired, live tools will show a perfectly healthy system.
+- **Containers:** a cgroup memory limit (ECS/EKS) can OOM-kill a task while the host's `free -h`/CloudWatch `MemoryUtilization` looks completely fine — check the container/task limit separately.
+
 ## Methodology
 
 1. **Is "low free" actually a problem, or just cache doing its job?** `free -h -w`, look at `available` not `free`.

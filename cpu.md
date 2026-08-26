@@ -2,6 +2,14 @@
 
 "High CPU" is often the *symptom* reported, rarely the actual diagnosis. The real question is always one of: too much work, work stuck waiting on something else (which shows up as CPU pressure but isn't a CPU problem), one runaway thread, or — on AWS specifically — a burstable instance that simply ran out of credit. This guide walks through telling those apart.
 
+## 1-Minute Summary
+
+- `uptime` + `nproc` first — load average is a count of runnable/waiting processes, not a percentage; compare it to your core count before deciding anything is "high."
+- `cat /proc/pressure/cpu` is the fastest honest answer to "is CPU actually the bottleneck" — no math against core count required.
+- One hot core vs. all of them changes the fix entirely — check with `mpstat -P ALL 1`, not just aggregate `top`.
+- `strace -c -p PID` / `perf top -p PID` tell you *what* the hot thread is actually doing, once you've found it.
+- **On `t3`/`t4g`:** CPU can be hard-throttled by credit exhaustion while `top` shows normal/low usage. Check CloudWatch `CPUCreditBalance` before assuming a code regression.
+
 ## Methodology
 
 1. **Is the system actually loaded, relative to its core count?** `uptime` + `nproc`.

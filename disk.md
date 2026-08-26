@@ -2,6 +2,14 @@
 
 Disk problems on EC2 split into two categories that need completely different tools: **"the volume is full"** (a capacity problem, boring but urgent) and **"I/O is slow"** (a performance problem, where EBS's credit/burst mechanics are usually the actual cause). This guide covers both, plus the inode-exhaustion trap that `df -h` alone will never show you.
 
+## 1-Minute Summary
+
+- `df -h` **and** `df -i` — space and inodes are separate resources; a disk can have plenty of space and still refuse to create files because inodes ran out.
+- `cat /proc/pressure/io` tells you stall time, not busy-ness — a device can be 100% utilized and fine, or moderately utilized and genuinely stalling.
+- `iostat -xz 1` — read `%util`, `await`, and `aqu-sz` together: high utilization *with* climbing `await`/queue size is real saturation, not just a busy device keeping up.
+- A process in `D` state (`ps -eo pid,stat,wchan,comm | awk '$2 ~ /D/'`) is stuck in the kernel, almost always on I/O, and can't be killed until the I/O resolves.
+- **On EBS `gp2`:** burst balance hitting zero causes a sudden, uniform slowdown with no error message — check CloudWatch `BurstBalance` before assuming an application-side cause. `gp3` avoids this entirely.
+
 ## Methodology
 
 1. **Full or slow?** These are different investigations — don't run `iostat` for a full disk, or `df` for a slow one.

@@ -2,6 +2,14 @@
 
 Network incidents on AWS have an extra wrinkle that pure-Linux guides skip: the guest OS is only *one* of several layers that can drop or block a connection. Security groups, NACLs, route tables, and the ENA driver all sit between "the app called `connect()`" and "the packet actually left the instance" — and each one fails silently from the guest's point of view. This guide works outward from the guest OS, then names where to look once the guest itself is clean.
 
+## 1-Minute Summary
+
+- `ip r` for a route, `ss -tulpn` to confirm the app is actually listening on `0.0.0.0`, not `127.0.0.1` — a shockingly common root cause that works fine from `localhost` and fails for everyone else.
+- A failed `ping` proves nothing on AWS — ICMP is routinely blocked by security groups while the real application port works fine. Test the actual port instead.
+- **Security groups (stateful, per-ENI) vs. NACLs (stateless, per-subnet)** are different layers — check both if the guest OS looks clean.
+- `tcpdump` is ground truth when `ss` or application logs are ambiguous or the symptom is intermittent.
+- Guest OS clean, connections still fail → check **VPC Flow Logs** for `REJECT` records happening above the guest entirely.
+
 ## Methodology
 
 1. **Can the box route to where it needs to go, at all?** `ip r`, `ip a`.
